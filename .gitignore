@@ -12,3 +12,4 @@ hardware/fp-info-cache
 hardware/*.kicad_prl
 hardware/*.lck
 __pycache__/
+hardware/case/assembly.step

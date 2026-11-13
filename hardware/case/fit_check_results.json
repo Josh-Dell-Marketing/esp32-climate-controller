@@ -1,0 +1,173 @@
+{
+  "frame": {
+    "pcb_bbox_step": [
+      50.0,
+      140.0,
+      -136.0,
+      -50.0,
+      0.0,
+      1.51
+    ],
+    "all_bbox_step": [
+      50.0,
+      140.0,
+      -136.0,
+      -50.0,
+      -1.905,
+      17.195
+    ],
+    "frame_as_expected": true,
+    "step_to_assembly": [
+      -50.0,
+      50.0,
+      7.0
+    ]
+  },
+  "collisions": [],
+  "pairs_checked": 1051,
+  "intersection_volumes_mm3": {
+    "base x board/components/NodeMCU/plug/keep-outs": 0.0,
+    "lid x board/components/NodeMCU/plug/keep-outs": 0.0,
+    "base x lid": 0.0,
+    "gland locknuts+threads x board/plug/lid/base/standoffs": 0.0,
+    "gland outside bodies x base/lid": 0.0,
+    "PCB standoffs x board parts/lid/base (incl. PCB: M3 thread passes the 3.2 hole)": 0.0,
+    "USB plug insertion path (40 mm sweep) x base/lid": 0.0,
+    "NodeMCU solids x STEP parts (info)": 0.0
+  },
+  "gaps_mm": {
+    "PCB edge -> left wall (measured)": 4.994,
+    "PCB edge -> right wall (measured)": 1.0,
+    "PCB edge -> top wall (measured)": 7.99,
+    "PCB edge -> bottom wall (measured)": 1.99,
+    "tallest part": "K2 top z=24.20 (15.60 above board top)",
+    "tallest part top -> lid underside plane": 3.305,
+    "min distance lid (incl. lip, pads, USB tab) -> any component": [
+      2.657,
+      "K1"
+    ],
+    "5 closest components to the lid": [
+      [
+        2.657,
+        "K1"
+      ],
+      [
+        2.657,
+        "K4"
+      ],
+      [
+        3.158,
+        "NodeMCU micro-USB"
+      ],
+      [
+        3.305,
+        "K2"
+      ],
+      [
+        3.305,
+        "K3"
+      ]
+    ],
+    "relays top -> lid underside": 3.305,
+    "terminal block bodies (wire openings) -> top wall inner face": 8.7,
+    "terminal blocks -> top wall (measured min distance)": 8.7,
+    "J1 (5 V in) wire openings -> left wall inner face": 5.7,
+    "USB plug -> base (min)": 0.599,
+    "USB plug -> lid (min)": 1.0,
+    "USB plug front face -> socket face": 0.0,
+    "M16 mains A: locknut -> nearest part": [
+      3.0,
+      "PCB"
+    ],
+    "M16 mains A: thread -> nearest part": [
+      2.0,
+      "PCB"
+    ],
+    "M16 mains A: locknut -> lid": 1.0,
+    "M16 mains A: locknut -> floor top": 1.75,
+    "M16 mains B: locknut -> nearest part": [
+      3.0,
+      "PCB"
+    ],
+    "M16 mains B: thread -> nearest part": [
+      2.0,
+      "PCB"
+    ],
+    "M16 mains B: locknut -> lid": 1.0,
+    "M16 mains B: locknut -> floor top": 1.75,
+    "M12 5V in: locknut -> nearest part": [
+      1.19,
+      "PCB"
+    ],
+    "M12 5V in: thread -> nearest part": [
+      3.69,
+      "PCB"
+    ],
+    "M12 5V in: locknut -> lid": 0.8,
+    "M12 5V in: locknut -> floor top": 7.7,
+    "M12 sensor: locknut -> nearest part": [
+      1.19,
+      "PCB"
+    ],
+    "M12 sensor: thread -> nearest part": [
+      3.69,
+      "PCB"
+    ],
+    "M12 sensor: locknut -> lid": 0.8,
+    "M12 sensor: locknut -> floor top": 7.7,
+    "standoff @ board (3.5, 24.0) -> nearest component": [
+      0.625,
+      "K1"
+    ],
+    "standoff @ board (86.5, 24.0) -> nearest component": [
+      0.625,
+      "K4"
+    ],
+    "standoff @ board (3.2, 82.8) -> nearest component": [
+      0.975,
+      "J6"
+    ],
+    "standoff @ board (37.5, 83.0) -> nearest component": [
+      0.825,
+      "NodeMCU PCB"
+    ],
+    "NodeMCU micro-USB socket -> base (sits in the slot)": 2.878,
+    "5 closest components to the base (excl. PCB/sockets)": [
+      [
+        1.2,
+        "NodeMCU PCB"
+      ],
+      [
+        1.856,
+        "J6"
+      ],
+      [
+        2.095,
+        "R8"
+      ],
+      [
+        2.095,
+        "R4"
+      ],
+      [
+        2.095,
+        "R1"
+      ]
+    ],
+    "J6 mated XH plug (est.) -> lid": 6.113,
+    "lowest lead tip -> floor top": 3.095,
+    "PCB bottom -> floor top": 5.0
+  },
+  "outer_dims_mm": [
+    100.0,
+    100.0,
+    29.5
+  ],
+  "outer_dims_ok": true,
+  "base_valid": true,
+  "lid_valid": true,
+  "base_volume_cm3": 40.17,
+  "lid_volume_cm3": 19.99,
+  "PASS": true,
+  "runtime_s": 83.2
+}
