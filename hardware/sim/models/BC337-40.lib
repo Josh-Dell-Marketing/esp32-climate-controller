@@ -1,0 +1,25 @@
+* BC337-40 NPN, TO-92, Vceo 45 V, Ic 800 mA, hFE(-40) 250..630
+*
+* Source: Philips (now Nexperia) Gummel-Poon model for BC337-40, as distributed
+* verbatim in the LTspice standard libraries and in KiCad-Spice-Library
+* (Models/Transistor/BJT/BJT.lib, github.com/kicad-spice-library/KiCad-Spice-Library).
+* The LTspice-only tags (Vceo=45 Icrating=500m mfg=Philips) are removed because
+* ngspice does not accept them; all electrical parameters are unchanged.
+*
+* BC337-40 is the nominal part. The model has BF=436.8 (mid-range of the -40
+* gain group). BC337-40_LOWGAIN is the same model with BF scaled down so the
+* DC gain is near the -40 group minimum (hFE ~250) for a worst-case base drive check.
+*
+* The Gummel-Poon model has no breakdown. Collector avalanche is modelled
+* separately in the driver netlists (D_BVCES, see diodes.lib) when needed.
+.model BC337-40 NPN(IS=7.809E-14 NF=0.9916 ISE=2.069E-15 NE=1.4 BF=436.8 IKF=0.8
++ VAF=103.6 NR=0.991 ISC=6.66E-14 NC=1.2 BR=44.14 IKR=0.09 VAR=14 RB=70 IRB=2.00E-04
++ RBM=8 RE=0.12 RC=0.24 XTB=0 EG=1.11 XTI=3 CJE=3.579E-11 VJE=0.6657 MJE=0.3596
++ TF=5E-10 XTF=2.5 VTF=2 ITF=0.5 PTF=88 CJC=1.306E-11 VJC=0.3647 MJC=0.3658
++ XCJC=0.455 TR=2.50E-08 CJS=0 VJS=0.75 MJS=0.333 FC=0.843)
+
+.model BC337-40_LOWGAIN NPN(IS=7.809E-14 NF=0.9916 ISE=2.069E-15 NE=1.4 BF=250 IKF=0.8
++ VAF=103.6 NR=0.991 ISC=6.66E-14 NC=1.2 BR=44.14 IKR=0.09 VAR=14 RB=70 IRB=2.00E-04
++ RBM=8 RE=0.12 RC=0.24 XTB=0 EG=1.11 XTI=3 CJE=3.579E-11 VJE=0.6657 MJE=0.3596
++ TF=5E-10 XTF=2.5 VTF=2 ITF=0.5 PTF=88 CJC=1.306E-11 VJC=0.3647 MJC=0.3658
++ XCJC=0.455 TR=2.50E-08 CJS=0 VJS=0.75 MJS=0.333 FC=0.843)

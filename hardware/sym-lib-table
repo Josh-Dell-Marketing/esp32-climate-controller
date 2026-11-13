@@ -1,0 +1,4 @@
+(sym_lib_table
+	(version 7)
+	(lib (name "climate")(type "KiCad")(uri "${KIPRJMOD}/lib/climate.kicad_sym")(options "")(descr "Climate controller project symbols"))
+)

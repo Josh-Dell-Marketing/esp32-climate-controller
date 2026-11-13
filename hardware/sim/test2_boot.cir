@@ -1,0 +1,47 @@
+* TEST 2 - boot behaviour of one relay channel
+* The ESP8266 pin is modelled as a source VG behind resistance RSRC, plus an
+* optional leakage current ILEAK into the pin node. run_sim.py sets:
+*   open (hi-Z)       : RSRC=1T, ILEAK=0
+*   30 uA leak        : RSRC=1T, ILEAK=30u
+*   internal pull-up  : VG0=VG1=3.3, RSRC=30k or 50k (GPIO12/13/14 pull-up range)
+*   GPIO16 boot pulse : VG 0 -> 3.3 V for 50 ms at t=10 ms, RSRC=30 ohm
+* and RPD=10k (as designed) or 4.7k (candidate fix).
+
+.include models/BC337-40.lib
+.include models/diodes.lib
+.include models/relay_channel.lib
+
+.param VSUP=5.0
+.param VG0=0
+.param VG1=0
+.param TD=10m
+.param TPW=50m
+.param RSRC=1T
+.param ILEAK=0
+.param RB=1k
+.param RPD=10k
+.param LCOIL=150m
+
+VSUP vp 0 DC {VSUP}
+
+* ---- pin model ----
+VG    gsrc 0 PULSE({VG0} {VG1} {TD} 1u 1u {TPW} 1)
+RSRC  gsrc gpio {RSRC}
+ILEAK 0 gpio DC {ILEAK}
+* ---- base network ----
+Rb   gpio b {RB}
+Rpd  b 0 {RPD}
+V_IB b bq 0
+Q1   cq bq 0 BC337-40
+V_IC c cq 0
+* ---- coil, flyback diode, LED (as designed) ----
+V_ICOIL vp ctop 0
+Xcoil ctop c SRD05_COIL L={LCOIL}
+Dfly c nf 1N4148
+Rfly nf vp 1m
+Dled vp nled LED_RED
+Rled nled c 1k
+
+.options method=gear
+.tran 5u 100m 0 20u
+.end

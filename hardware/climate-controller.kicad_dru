@@ -1,0 +1,27 @@
+(version 1)
+
+# Mains (relay contact) copper must stay well away from everything else.
+# Note: KiCad ignores '!B.hasNetclass(...)' here - use B.NetClass != 'Mains'.
+(rule "mains_to_low_voltage_clearance"
+  (constraint clearance (min 3.0mm))
+  (condition "A.NetClass == 'Mains' && B.NetClass != 'Mains'"))
+
+(rule "mains_to_low_voltage_creepage"
+  (constraint creepage (min 4.0mm))
+  (condition "A.NetClass == 'Mains' && B.NetClass != 'Mains'"))
+
+# Between different mains nets (e.g. COM and NO across an open contact,
+# or two channels on different circuits).
+(rule "mains_to_mains_clearance"
+  (constraint clearance (min 2.0mm))
+  (condition "A.NetClass == 'Mains' && B.NetClass == 'Mains'"))
+
+# Every ground pad is also joined by a routed track, so one pour spoke is enough.
+(rule "ground_pad_spokes"
+  (constraint min_resolved_spokes 1)
+  (condition "A.Type == 'Pad' && A.NetName == 'GND'"))
+
+# Metal mounting screws: keep mains copper away from the holes.
+(rule "mains_to_mounting_hole"
+  (constraint hole_clearance (min 3.0mm))
+  (condition "A.NetClass == 'Mains' && B.Type == 'Pad' && B.Pad_Type == 'NPTH, mechanical'"))

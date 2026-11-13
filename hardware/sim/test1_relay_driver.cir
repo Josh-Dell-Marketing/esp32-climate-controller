@@ -1,0 +1,52 @@
+* TEST 1 - one relay driver channel, transient
+* GPIO steps 0 -> 3.3 V at 10 ms and back to 0 at 60 ms.
+* run_sim.py rewrites the .param lines below for each case
+* (supply 5.0 / 4.5 V, coil L 50/150/500 mH, flyback diode fitted / removed,
+*  nominal / low-gain transistor) and saves each variant in build/.
+*
+* Zero-volt sources V_I* are ammeters (current flows into their + node).
+
+.include models/BC337-40.lib
+.include models/diodes.lib
+.include models/relay_channel.lib
+
+.param VSUP=5.0
+.param LCOIL=150m
+.param RFLY=1m
+.param RGPIO=30
+.param RB=1k
+.param RPD=10k
+.param RAV=1m
+
+* ---- supply (ideal for this test: the power path is covered in test 3) ----
+VSUP vp 0 DC {VSUP}
+
+* ---- ESP8266 GPIO: 3.3 V push-pull, ~30 ohm output resistance ----
+VG   gsrc 0 PULSE(0 3.3 10m 10n 10n 50m 1)
+RG   gsrc gpio {RGPIO}
+V_IG gpio g1 0
+* ---- base network ----
+Rb   g1 b {RB}
+Rpd  b 0 {RPD}
+V_IB b bq 0
+Q1   cq bq 0 BC337-40
+V_IC c cq 0
+* ---- relay coil (SRD-05VDC-SL-C) ----
+V_ICOIL vp ctop 0
+Xcoil ctop c SRD05_COIL L={LCOIL}
+* ---- flyback diode 1N4148, cathode to +5V (RFLY=1T removes it) ----
+Dfly c nf 1N4148
+V_ID nf nf2 0
+Rfly nf2 vp {RFLY}
+* ---- indicator LED + 1k in parallel with the coil ----
+V_ILED vp la 0
+Dled la nled LED_RED
+Rled nled c 1k
+* ---- BC337 collector avalanche, V(BR)CES 50 V (RAV=1T removes it) ----
+Dav  nav c D_BVCES
+Rav  nav 0 {RAV}
+
+* gear integration: trapezoidal leaves an artificial undamped L-Cpar ring after release
+.options method=gear
+.tran 2u 120m 0 5u
+.end

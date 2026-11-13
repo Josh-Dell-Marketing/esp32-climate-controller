@@ -1,0 +1,74 @@
+* TEST 3 - power path, 4 relays switching ON together plus a NodeMCU WiFi burst
+*
+* 5 V supply -> lead -> F1 polyfuse (MF-R110, ~0.25 ohm) -> D_REV 1N5819 -> +5V
+* +5V: C1 470 uF / 10 V electrolytic (ESR 0.1 ohm), C2 100 nF,
+*      4 relay channels, NodeMCU VIN (AMS1117-3.3 input).
+*
+* USB mode (RSRC_IN=1T, RUSB_EFF=cable R): the 5 V input terminal is not powered; it sees RIN_OFF
+* (open = 1T, or a dead supply modelled as 100 ohm / 1 ohm). The NodeMCU's USB
+* 5 V reaches +5V through the USB cable (RUSB) and the board's series Schottky
+* (modelled with the typical 1N5819 card: ~0.35 V at 0.4 A, matches the
+* 0.3-0.4 V stated for the NodeMCU's diode).
+*
+* run_sim.py sets VIN (5.0 / 4.75), the D_REV model (typ / datasheet max /
+* Diodes Inc / P-MOSFET fix) and the USB-mode parameters.
+
+.include models/BC337-40.lib
+.include models/diodes.lib
+.include models/relay_channel.lib
+
+.param VIN=5.0
+.param RSRC_IN=1m
+.param RIN_OFF=1T
+.param VUSB=5.0
+.param RUSB_EFF=1T
+.param RDREV_BYPASS=1T
+.param LCOIL=150m
+
+* ---- DC input: source, 1 m of lead (~20 mohm, 0.5 uH), polyfuse ----
+VIN   vsrc 0 DC {VIN}
+* RSRC_IN = 1T disconnects the supply (USB-only mode)
+RSRCI vsrc vin_a {RSRC_IN}
+RINOFF vin_a 0 {RIN_OFF}
+LLEAD vin_a vin_b 0.5u
+RLEAD vin_b vterm 20m
+V_IIN vterm f1 0
+RF1   f1 dan 0.25
+* ---- reverse polarity diode D_REV (model swapped by run_sim.py) ----
+DREV  dan vp 1N5819
+* optional bypass used to model a P-MOSFET ideal diode fix (Rds(on) ~60 mohm)
+RBYP  dan vp {RDREV_BYPASS}
+
+* ---- +5V rail bulk and decoupling ----
+C1    vp c1n 470u
+RC1   c1n 0 0.1
+C2    vp 0 100n
+
+* ---- four relay channels, all switched ON at 10 ms ----
+VG    gsrc 0 PULSE(0 3.3 10m 10n 10n 1 2)
+RG1   gsrc g1 30
+RG2   gsrc g2 30
+RG3   gsrc g3 30
+RG4   gsrc g4 30
+V_IR  vp vrel 0
+X1    vrel 0 g1 RELAY_CH L={LCOIL}
+X2    vrel 0 g2 RELAY_CH L={LCOIL}
+X3    vrel 0 g3 RELAY_CH L={LCOIL}
+X4    vrel 0 g4 RELAY_CH L={LCOIL}
+
+* ---- NodeMCU VIN load: 80 mA average, WiFi TX bursts to 300 mA for 2 ms ----
+* bursts start at 10 ms (same instant as the relays, worst case) and repeat every 10 ms
+* (no NodeMCU onboard input capacitance assumed: conservative)
+V_INODE vp vnode 0
+INODE vnode 0 PULSE(80m 300m 10m 10u 10u 2m 10m)
+
+* ---- USB path (USB_ON=1): USB 5 V -> cable -> NodeMCU series Schottky -> +5V ----
+* RUSB_EFF = cable resistance in USB mode, 1T otherwise
+VUSB  usb 0 DC {VUSB}
+RUSB  usb usb_b {RUSB_EFF}
+V_IUSB usb_b usb_c 0
+DUSB  usb_c vp 1N5819
+
+.options method=gear
+.tran 5u 60m 0 10u
+.end

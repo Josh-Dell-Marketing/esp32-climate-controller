@@ -1,0 +1,38 @@
+* Relay coil and one complete relay driver channel.
+* Needs BC337-40.lib and diodes.lib to be included first.
+
+* ---------------------------------------------------------------------------
+* Songle SRD-05VDC-SL-C coil: 70 ohm (datasheet: 69.4 ohm +/-10%, 71.4 mA at 5 V),
+* must-operate <= 3.75 V, must-release >= 0.5 V.
+* Inductance is NOT in the datasheet. Default 150 mH: published bench measurements of
+* this relay family give roughly 0.1-0.2 H (armature open lower, closed higher), and
+* L/R = 2 ms is consistent with the 10 ms max operate / 5 ms max release spec.
+* The simulations sweep L = 50 mH, 150 mH and 500 mH.
+* CPAR = coil inter-winding capacitance (assumed 20 pF, only matters without a clamp).
+* ---------------------------------------------------------------------------
+.subckt SRD05_COIL top bot params: L=150m RCOIL=70 CPAR=20p
+Rcoil top n1 {RCOIL}
+Lcoil n1 bot {L}
+Cpar  top bot {CPAR}
+.ends SRD05_COIL
+
+* ---------------------------------------------------------------------------
+* One relay channel exactly as designed:
+*   coil top -> +5V, coil bottom -> collector of BC337-40, emitter -> GND
+*   Rb 1k from GPIO to base, Rpd 10k base-emitter
+*   1N4148 across coil (cathode +5V, anode collector)
+*   red LED + 1k in parallel with the coil (anode +5V, via 1k to collector)
+* Ports: vp (+5V)  gnd  gpio
+* Params: L coil inductance, RB, RPD, RFLY (series R of flyback diode; 1T = diode absent)
+* ---------------------------------------------------------------------------
+.subckt RELAY_CH vp gnd gpio params: L=150m RB=1k RPD=10k RFLY=1m
+Rb   gpio b {RB}
+Rpd  b gnd {RPD}
+Q1   c b gnd BC337-40
+Xcoil vp c SRD05_COIL L={L}
+Dfly c nf 1N4148
+Rfly nf vp {RFLY}
+Dled vp nled LED_RED
+Rled nled c 1k
+Dav  gnd c D_BVCES
+.ends RELAY_CH

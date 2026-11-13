@@ -1,0 +1,32 @@
+* Diode models used by the relay-carrier simulations.
+
+* 1N4148 small-signal switching diode (flyback clamp). 75 V, IF(AV) 200 mA (Vishay/onsemi
+* datasheets: IFSM 2 A for 1 us, 1 A for 1 ms, 0.5 A for 1 s).
+* Source: onsemi model as distributed in the LTspice standard.dio library and
+* KiCad-Spice-Library Models/Diode/DIODE2.lib (Iave/Vpk/mfg/type tags removed for ngspice).
+.model 1N4148 D(Is=2.52n Rs=.568 N=1.752 Cjo=4p M=.4 tt=20n BV=75 IBV=5u)
+
+* 1N5819 Schottky, 40 V 1 A (reverse-polarity diode D_REV).
+* TYPICAL: onsemi model from LTspice standard.dio / KiCad-Spice-Library DIODE2.lib
+* (Iave/Vpk/mfg/type tags removed). Gives Vf ~0.35 V at 0.4 A, close to the datasheet typical curve.
+.model 1N5819 D(Is=31.7u Rs=.051 N=1.373 Cjo=110p M=.35 Eg=.69 Xti=2 BV=40 IBV=1m)
+
+* DATASHEET-MAX corner (fitted here, not a vendor model): Vf = 0.60 V at 1 A,
+* which is the 1N5819 maximum at 25 C (Diodes Inc / onsemi / Vishay datasheets), ~0.51 V at 0.45 A.
+.model 1N5819_MAX D(Is=2.5u Rs=0.10 N=1.5 Cjo=110p M=.35 BV=40 IBV=1m)
+
+* Diodes Inc published model (verbatim from Diodes Inc SPICE model DI_1N5819).
+* Note: it gives ~0.76 V at 1 A, which is ABOVE the 0.60 V datasheet maximum,
+* so it is reported only as a pessimistic reference.
+*SRC=1N5819;DI_1N5819;Diodes;Si;  40.0V  1.00A  3.00us   Diodes Inc. Schottky Barrier Rectifier
+.MODEL DI_1N5819 D  ( IS=390n RS=0.115 BV=40.0 IBV=1.00m
++ CJO=203p  M=0.333 N=1.70 TT=4.32u )
+
+* Red indicator LED, generic 3 mm / 5 mm (fitted here): Vf ~1.95 V at 3 mA, ~2.05 V at 20 mA.
+* Reverse rating of typical LEDs: VR = 5 V max. No breakdown modelled.
+.model LED_RED D(Is=1e-19 N=2.0 Rs=5 Cjo=20p)
+
+* Collector avalanche of the BC337 (not in the Gummel-Poon model): V(BR)CES = 50 V
+* (datasheet minimum). Placed cathode=collector, anode=emitter. It does nothing
+* in normal operation and only matters for the "no flyback diode" case.
+.model D_BVCES D(Is=1e-15 N=1 BV=50 IBV=1m Rs=1)

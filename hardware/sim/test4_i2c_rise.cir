@@ -1,0 +1,20 @@
+* TEST 4 - I2C rise time (SDA or SCL line), 3.3 V
+* Pull-up RPU: 4.7k on the carrier alone, or 4.7k || 10k (SHT31 breakout's own pull-up).
+* CBUS: total bus capacitance 100 / 200 / 400 pF (0.5-1 m cable + pins + inputs).
+* The open-drain driver is a switch with 60 ohm on-resistance (an I2C output
+* that just meets VOL = 0.4 V at 3 mA would be ~133 ohm; real ESP8266/SHT31
+* outputs are stronger). It holds the line low until 2 us, then releases it.
+
+.param RPU=4.7k
+.param CBUS=200p
+
+V33   v33 0 DC 3.3
+RPU   v33 sda {RPU}
+CBUS  sda 0 {CBUS}
+V_ISNK sda sw 0
+SDRV  sw 0 ctl 0 SWOD
+VCTL  ctl 0 PWL(0 1 2u 1 2.001u 0)
+.model SWOD SW(VT=0.5 VH=0.01 RON=60 ROFF=1G)
+
+.tran 2n 12u 0 5n
+.end

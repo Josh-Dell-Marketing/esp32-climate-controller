@@ -1,0 +1,469 @@
+(footprint "NodeMCU_v2_Socket"
+	(version 20241229)
+	(generator "climate_gen")
+	(layer "F.Cu")
+	(descr "NodeMCU v2 (Amica) ESP8266 board on two 1x15 2.54 mm female sockets, 22.86 mm row spacing. Pins 1-15: A0..VIN row, 16-30: D0..3V3 row. USB end at +X."
+
+	)
+	(tags "NodeMCU ESP8266 socket")
+	(property "Reference" "REF**"
+		(at -12.15 -10.5 0)
+		(layer "F.SilkS")
+		(effects (font (size 1 1) (thickness 0.15)))
+	)
+	(property "Value" "NodeMCU_v2"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(effects (font (size 1 1) (thickness 0.15)))
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects (font (size 1 1) (thickness 0.15)))
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects (font (size 1 1) (thickness 0.15)))
+	)
+	(attr through_hole)
+	(fp_line (start -24.15 -12.7) (end 24.15 -12.7) (stroke (width 0.1) (type solid)) (layer "F.Fab"))
+	(fp_line
+		(start -24.15 -12.7)
+		(end 24.15 -12.7)
+		(stroke (width 0.12) (type solid))
+		(layer "F.SilkS")
+	)
+	(fp_line (start 24.15 -12.7) (end 24.15 12.7) (stroke (width 0.1) (type solid)) (layer "F.Fab"))
+	(fp_line (start 24.15 -12.7) (end 24.15 12.7) (stroke (width 0.12) (type solid)) (layer "F.SilkS"))
+	(fp_line (start 24.15 12.7) (end -24.15 12.7) (stroke (width 0.1) (type solid)) (layer "F.Fab"))
+	(fp_line (start 24.15 12.7) (end -24.15 12.7) (stroke (width 0.12) (type solid)) (layer "F.SilkS"))
+	(fp_line (start -24.15 12.7) (end -24.15 -12.7) (stroke (width 0.1) (type solid)) (layer "F.Fab"))
+	(fp_line
+		(start -24.15 12.7)
+		(end -24.15 -12.7)
+		(stroke (width 0.12) (type solid))
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -24.4 -12.95)
+		(end 24.4 -12.95)
+		(stroke (width 0.05) (type solid))
+		(layer "F.CrtYd")
+	)
+	(fp_line (start 24.4 -12.95) (end 24.4 12.95) (stroke (width 0.05) (type solid)) (layer "F.CrtYd"))
+	(fp_line (start 24.4 12.95) (end -24.4 12.95) (stroke (width 0.05) (type solid)) (layer "F.CrtYd"))
+	(fp_line
+		(start -24.4 12.95)
+		(end -24.4 -12.95)
+		(stroke (width 0.05) (type solid))
+		(layer "F.CrtYd")
+	)
+	(fp_line (start 20.15 -3.5) (end 24.15 -3.5) (stroke (width 0.12) (type solid)) (layer "F.SilkS"))
+	(fp_line (start 20.15 3.5) (end 24.15 3.5) (stroke (width 0.12) (type solid)) (layer "F.SilkS"))
+	(fp_text user "USB" (at 17.65 0 90) (layer "F.SilkS") (effects (font (size 1 1) (thickness 0.15))))
+	(fp_text user "ANTENNA - KEEP CLEAR"
+		(at -21.15 0 90)
+		(layer "F.SilkS")
+		(effects (font (size 0.9 0.9) (thickness 0.13)))
+	)
+	(pad "1" thru_hole
+		rect
+		(at -17.78 11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "A0"
+		(at -17.78 9.43 90)
+		(layer "F.Fab")
+		(effects (font (size 0.6 0.6) (thickness 0.09)))
+	)
+	(pad "2" thru_hole
+		circle
+		(at -15.24 11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "RSV"
+		(at -15.24 9.43 90)
+		(layer "F.Fab")
+		(effects (font (size 0.6 0.6) (thickness 0.09)))
+	)
+	(pad "3" thru_hole
+		circle
+		(at -12.7 11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "RSV"
+		(at -12.7 9.43 90)
+		(layer "F.Fab")
+		(effects (font (size 0.6 0.6) (thickness 0.09)))
+	)
+	(pad "4" thru_hole
+		circle
+		(at -10.16 11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "SD3"
+		(at -10.16 9.43 90)
+		(layer "F.Fab")
+		(effects (font (size 0.6 0.6) (thickness 0.09)))
+	)
+	(pad "5" thru_hole
+		circle
+		(at -7.62 11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "SD2"
+		(at -7.62 9.43 90)
+		(layer "F.Fab")
+		(effects (font (size 0.6 0.6) (thickness 0.09)))
+	)
+	(pad "6" thru_hole
+		circle
+		(at -5.08 11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "SD1"
+		(at -5.08 9.43 90)
+		(layer "F.Fab")
+		(effects (font (size 0.6 0.6) (thickness 0.09)))
+	)
+	(pad "7" thru_hole
+		circle
+		(at -2.54 11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "CMD"
+		(at -2.54 9.43 90)
+		(layer "F.Fab")
+		(effects (font (size 0.6 0.6) (thickness 0.09)))
+	)
+	(pad "8" thru_hole
+		circle
+		(at 0 11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "SD0" (at 0 9.43 90) (layer "F.Fab") (effects (font (size 0.6 0.6) (thickness 0.09))))
+	(pad "9" thru_hole
+		circle
+		(at 2.54 11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "CLK"
+		(at 2.54 9.43 90)
+		(layer "F.Fab")
+		(effects (font (size 0.6 0.6) (thickness 0.09)))
+	)
+	(pad "10" thru_hole
+		circle
+		(at 5.08 11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "GND"
+		(at 5.08 9.43 90)
+		(layer "F.Fab")
+		(effects (font (size 0.6 0.6) (thickness 0.09)))
+	)
+	(pad "11" thru_hole
+		circle
+		(at 7.62 11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "3V3"
+		(at 7.62 9.43 90)
+		(layer "F.Fab")
+		(effects (font (size 0.6 0.6) (thickness 0.09)))
+	)
+	(pad "12" thru_hole
+		circle
+		(at 10.16 11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "EN"
+		(at 10.16 9.43 90)
+		(layer "F.Fab")
+		(effects (font (size 0.6 0.6) (thickness 0.09)))
+	)
+	(pad "13" thru_hole
+		circle
+		(at 12.7 11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "RST"
+		(at 12.7 9.43 90)
+		(layer "F.Fab")
+		(effects (font (size 0.6 0.6) (thickness 0.09)))
+	)
+	(pad "14" thru_hole
+		circle
+		(at 15.24 11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "GND"
+		(at 15.24 9.43 90)
+		(layer "F.Fab")
+		(effects (font (size 0.6 0.6) (thickness 0.09)))
+	)
+	(pad "15" thru_hole
+		circle
+		(at 17.78 11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "VIN"
+		(at 17.78 9.43 90)
+		(layer "F.Fab")
+		(effects (font (size 0.6 0.6) (thickness 0.09)))
+	)
+	(pad "16" thru_hole
+		rect
+		(at -17.78 -11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "D0"
+		(at -17.78 -9.43 90)
+		(layer "F.Fab")
+		(effects (font (size 0.6 0.6) (thickness 0.09)))
+	)
+	(pad "17" thru_hole
+		circle
+		(at -15.24 -11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "D1"
+		(at -15.24 -9.43 90)
+		(layer "F.Fab")
+		(effects (font (size 0.6 0.6) (thickness 0.09)))
+	)
+	(pad "18" thru_hole
+		circle
+		(at -12.7 -11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "D2"
+		(at -12.7 -9.43 90)
+		(layer "F.Fab")
+		(effects (font (size 0.6 0.6) (thickness 0.09)))
+	)
+	(pad "19" thru_hole
+		circle
+		(at -10.16 -11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "D3"
+		(at -10.16 -9.43 90)
+		(layer "F.Fab")
+		(effects (font (size 0.6 0.6) (thickness 0.09)))
+	)
+	(pad "20" thru_hole
+		circle
+		(at -7.62 -11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "D4"
+		(at -7.62 -9.43 90)
+		(layer "F.Fab")
+		(effects (font (size 0.6 0.6) (thickness 0.09)))
+	)
+	(pad "21" thru_hole
+		circle
+		(at -5.08 -11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "3V3"
+		(at -5.08 -9.43 90)
+		(layer "F.Fab")
+		(effects (font (size 0.6 0.6) (thickness 0.09)))
+	)
+	(pad "22" thru_hole
+		circle
+		(at -2.54 -11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "GND"
+		(at -2.54 -9.43 90)
+		(layer "F.Fab")
+		(effects (font (size 0.6 0.6) (thickness 0.09)))
+	)
+	(pad "23" thru_hole
+		circle
+		(at 0 -11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "D5" (at 0 -9.43 90) (layer "F.Fab") (effects (font (size 0.6 0.6) (thickness 0.09))))
+	(pad "24" thru_hole
+		circle
+		(at 2.54 -11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "D6"
+		(at 2.54 -9.43 90)
+		(layer "F.Fab")
+		(effects (font (size 0.6 0.6) (thickness 0.09)))
+	)
+	(pad "25" thru_hole
+		circle
+		(at 5.08 -11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "D7"
+		(at 5.08 -9.43 90)
+		(layer "F.Fab")
+		(effects (font (size 0.6 0.6) (thickness 0.09)))
+	)
+	(pad "26" thru_hole
+		circle
+		(at 7.62 -11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "D8"
+		(at 7.62 -9.43 90)
+		(layer "F.Fab")
+		(effects (font (size 0.6 0.6) (thickness 0.09)))
+	)
+	(pad "27" thru_hole
+		circle
+		(at 10.16 -11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "RX"
+		(at 10.16 -9.43 90)
+		(layer "F.Fab")
+		(effects (font (size 0.6 0.6) (thickness 0.09)))
+	)
+	(pad "28" thru_hole
+		circle
+		(at 12.7 -11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "TX"
+		(at 12.7 -9.43 90)
+		(layer "F.Fab")
+		(effects (font (size 0.6 0.6) (thickness 0.09)))
+	)
+	(pad "29" thru_hole
+		circle
+		(at 15.24 -11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "GND"
+		(at 15.24 -9.43 90)
+		(layer "F.Fab")
+		(effects (font (size 0.6 0.6) (thickness 0.09)))
+	)
+	(pad "30" thru_hole
+		circle
+		(at 17.78 -11.43)
+		(size 1.7 1.7)
+		(drill 1)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+	)
+	(fp_text user "3V3"
+		(at 17.78 -9.43 90)
+		(layer "F.Fab")
+		(effects (font (size 0.6 0.6) (thickness 0.09)))
+	)
+	(model "${KICAD10_3DMODEL_DIR}/Connector_PinSocket_2.54mm.3dshapes/PinSocket_1x15_P2.54mm_Vertical.step"
+		(offset (xyz -17.78 -11.43 0))
+		(scale (xyz 1 1 1))
+		(rotate (xyz 0 0 -90))
+	)
+	(model "${KICAD10_3DMODEL_DIR}/Connector_PinSocket_2.54mm.3dshapes/PinSocket_1x15_P2.54mm_Vertical.step"
+		(offset (xyz -17.78 11.43 0))
+		(scale (xyz 1 1 1))
+		(rotate (xyz 0 0 -90))
+	)
+	(model "${KIPRJMOD}/lib/climate.3dshapes/NodeMCU_v2.wrl"
+		(offset (xyz 0 0 0))
+		(scale (xyz 1 1 1))
+		(rotate (xyz 0 0 0))
+	)
+)

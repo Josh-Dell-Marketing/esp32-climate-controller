@@ -1,0 +1,14 @@
+.pio/
+.vscode/
+include/secrets.h
+
+# Hardware: generated outputs and local tool environments
+hardware/build/
+hardware/sim/.venv/
+hardware/sim/build/
+hardware/case/.venv/
+hardware/*-backups/
+hardware/fp-info-cache
+hardware/*.kicad_prl
+hardware/*.lck
+__pycache__/
