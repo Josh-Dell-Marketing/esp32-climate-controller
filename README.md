@@ -66,7 +66,7 @@ For an ESP32 DevKit, use `pio run -e esp32dev -t upload`. The ESP32 pins are lis
 - **Equipment:** each relay, whether it is on, and why. The compressor shows a countdown while it rests.
 - **Set points:** change the values, then click **Save**. **Advanced** has the bands, the compressor rest and minimum run times, the fan run-on, and "fan always on".
 - **Simulated sensor:**
-  - The − and + buttons change the reading straight away.
+  - The âˆ’ and + buttons change the reading straight away.
   - **Room reacts** lets the relays move the readings, so you can watch a full cycle in a minute or two.
   - **Sensor fault** tests the safe shutdown.
 
@@ -108,3 +108,8 @@ src/storage.*          Saves settings to flash
 src/main.cpp           Relays, web server, WiFi, serial commands
 tools/test-control.ps1 Control-rule test against a running board
 ```
+
+## License
+
+- Firmware, scripts and documentation: [MIT](LICENSE).
+- Hardware (everything in `hardware/`: the KiCad design files, generator scripts, simulations and case CAD): [CERN-OHL-P-2.0](hardware/LICENSE), the permissive CERN Open Hardware Licence. You may use, change, make and sell it. Keep the licence notice with any copies of the design files.

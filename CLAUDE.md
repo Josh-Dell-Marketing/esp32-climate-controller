@@ -1,4 +1,4 @@
-# CLAUDE.md – ESP32/ESP8266 Climate Controller
+# CLAUDE.md â€“ ESP32/ESP8266 Climate Controller
 
 Guidance for Claude Code (and humans) working in this repo. Read this first, then `PLAN.md`.
 
@@ -77,10 +77,10 @@ The original setup is Windows 11 with PowerShell. Paths below assume that; adjus
   4. `make_pcb.py` places parts, using nets from KiCad's own netlist export so parity always holds. It hand-routes the mains traces on both layers, auto-routes the rest with `router.py` (a small A* grid router), and pours GND.
   5. DRC runs.
 - If you hand-edit in KiCad anyway (e.g. to polish routing), you're leaving the generator behind. Say so in the commit and stop using `build.ps1` for that file.
-- **Mains safety rules are enforced by DRC.** Netclass `Mains` covers the `*_COM/_NO/_NC` nets. Mains to low voltage needs ≥ 3.0 mm clearance and ≥ 4.0 mm creepage; mains to mains ≥ 2.0 mm; mains to screw holes ≥ 3.0 mm. Currently measured: 3.70 / 4.83 / 2.78 / 5.12 mm. Routed U-slots around each relay's COM pin provide the creepage. Don't weaken these rules to make DRC pass.
+- **Mains safety rules are enforced by DRC.** Netclass `Mains` covers the `*_COM/_NO/_NC` nets. Mains to low voltage needs â‰¥ 3.0 mm clearance and â‰¥ 4.0 mm creepage; mains to mains â‰¥ 2.0 mm; mains to screw holes â‰¥ 3.0 mm. Currently measured: 3.70 / 4.83 / 2.78 / 5.12 mm. Routed U-slots around each relay's COM pin provide the creepage. Don't weaken these rules to make DRC pass.
 - **Gotchas found the hard way:**
   - KiCad DRC silently ignores a condition like `!B.hasNetclass('Mains')`. Use `B.NetClass != 'Mains'`. To prove a rule is active, set it to an absurd value (20 mm) on a scratch copy and confirm DRC fails.
-  - On the horizontal Phoenix MKDS terminal footprints, the wire entry is on the footprint's **+Y** face. This was checked in the STEP model; the terminals are rotated 180° so the entry faces the board edge.
+  - On the horizontal Phoenix MKDS terminal footprints, the wire entry is on the footprint's **+Y** face. This was checked in the STEP model; the terminals are rotated 180Â° so the entry faces the board edge.
   - KiCad 3D-model z-rotation is the opposite sign to what you'd expect. The socket models use `-90`.
   - In PowerShell, `$fab` and a `-Fab` switch are the same variable (case-insensitive).
   - Never put `\"` at the end of a native argument (`-o "dir\"`), because it escapes the quote. Use `dir/`.
@@ -98,6 +98,7 @@ The original setup is Windows 11 with PowerShell. Paths below assume that; adjus
 - Keep docs in plain, direct English. When behaviour changes, update `README.md`, `PLAN.md`, `hardware/README.md`, or `CASE.md`, whichever applies.
 - Small, focused commits. Run the relevant checks first: firmware builds, `build.ps1`, `run_sim.py`, `fit_check.py`.
 - Don't commit secrets, `.pio/`, `hardware/build/` or any `.venv/`.
+- Licences: firmware, scripts and docs are MIT (`LICENSE`); everything in `hardware/` is CERN-OHL-P-2.0 (`hardware/LICENSE`). Don't add code or models with incompatible terms (e.g. copied without permission or under a non-commercial licence).
 
 ## Open questions for the project owner (from PLAN.md section 5)
 
