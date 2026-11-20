@@ -13,3 +13,7 @@ hardware/*.kicad_prl
 hardware/*.lck
 __pycache__/
 hardware/case/assembly.step
+
+# Host-test binary
+test_control
+test_control.exe
