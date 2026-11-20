@@ -7,16 +7,16 @@ A temperature and humidity controller for a small climate unit. It uses two ESP3
 
 For testing there are 2 encoders. The final version will use one concentric (dual-shaft) rotary encoder.
 
-There is no web page in the current scope. Everything is set on the Controller. (Phase 1 was built on an ESP8266 with a web page and a simulated sensor. That code is still in `src/` and is the starting point for the Mainboard firmware.)
+There is no web page in the current scope. Everything is set on the Controller. (Phase 1 was built on an ESP8266 with a web page and a simulated sensor. That firmware was removed; the last commit with it is `65d825e`.)
 
-Status, 20 Nov 2026: Phase 1 is built (on the ESP8266). The design has moved to the two-ESP32 layout above. Next is Phase 2: move the control firmware to the Mainboard.
+Status, 20 Nov 2026: Phase 1 is done (on the ESP8266). The firmware for both new boards is written and builds (`pio run -e mainboard`, `pio run -e controller`), and the control rules pass the host tests in `tools/host-test/`. Next: flash both boards and bench-test them (Phase 2 and 3 checklists).
 
 ## 1. Hardware
 
 ### System overview
 
 ```
-                 wired link (UART, see "Controller link")
+          wired link (UART now, RS-485 later, see "Controller link")
  Controller  <------------------------------------------->  Mainboard
  ESP32-C3 SuperMini                                          ESP32 WROOM-32 DevKit
    - DST-013 OLED (I2C)                                        - AHT20 + BMP280 sensor (I2C)
@@ -27,7 +27,9 @@ Status, 20 Nov 2026: Phase 1 is built (on the ESP8266). The design has moved to 
 
 The Mainboard runs the control rules on its own. If the Controller is unplugged or the link fails, the Mainboard carries on with its saved settings, and the Controller shows a link fault.
 
-### Mainboard pins (ESP32 WROOM-32, proposed)
+### Mainboard pins (ESP32 WROOM-32)
+
+These are set in `src/mainboard/config.h`. `README.md` has a drawing of the board.
 
 | Function | GPIO | Notes |
 |---|---|---|
@@ -41,19 +43,22 @@ The Mainboard runs the control rules on its own. If the Controller is unplugged 
 | Fan tach input | 34 | Input only, no internal pull-up: fit an external pull-up (see "Fan tach") |
 | Link TX (to Controller RX) | 17 | UART2 |
 | Link RX (from Controller TX) | 16 | UART2 |
+| RS-485 driver enable (MAX485 DE + /RE) | 4 | High while sending. Driven even on plain UART, where it is harmless |
 
 Avoid GPIO 0, 2, 5, 12 and 15 for outputs (boot strapping pins), and GPIO 6 to 11 (used by the flash chip). None of the relay pins above are strapping pins, so no relay can click on during boot.
 
 The relay board also needs VCC (5 V) and GND. Most cheap 4-relay boards switch ON when IN is pulled LOW. Check the board you have, and set `RELAY_ACTIVE_LOW` in `config.h` to match.
 
-### Controller pins (ESP32-C3 SuperMini, proposed)
+### Controller pins (ESP32-C3 SuperMini)
+
+These are set in `src/controller/config.h`.
 
 The SuperMini has GPIO 0 to 10, 20 and 21 on its pins. USB (programming and serial monitor) uses the C3's built-in USB on GPIO 18 and 19, so GPIO 20 and 21 are free for the link. GPIO 2, 8 and 9 are strapping pins. GPIO 8 also drives the on-board LED, and GPIO 9 is the BOOT button.
 
 | Function | GPIO | Notes |
 |---|---|---|
 | OLED SDA | 8 | The I2C pull-ups hold it high at boot, which this strapping pin needs |
-| OLED SCL | 9 | As above. Do not hold it low at power-up, or the chip enters download mode |
+| OLED SCK (I2C clock) | 9 | As above. Do not hold it low at power-up, or the chip enters download mode |
 | Encoder 1 A | 0 | |
 | Encoder 1 B | 1 | |
 | Encoder 1 push | 3 | |
@@ -62,38 +67,41 @@ The SuperMini has GPIO 0 to 10, 20 and 21 on its pins. USB (programming and seri
 | Encoder 2 push | 10 | |
 | Link TX (to Mainboard RX) | 21 | UART1 |
 | Link RX (from Mainboard TX) | 20 | UART1 |
-| Spare | 2, 6, 7 | GPIO 2 is a strapping pin |
+| RS-485 driver enable (MAX485 DE + /RE) | 7 | As on the Mainboard |
+| Spare | 2, 6 | GPIO 2 is a strapping pin |
 
-Use the internal pull-ups on the encoder pins, with the encoder common pin to GND. Check these pins against your SuperMini, because clones differ.
+The encoder pins use the internal pull-ups, with the encoder common pin to GND. On a module with a "+" pin (such as the KY-040), connect "+" to 3V3, not 5 V. GPIO 20 and 21 are also the chip's boot-message UART, so the Mainboard sees some noise when the Controller resets. The link's CRC throws it away.
 
 ### Display
 
-- **DST-013**: to be confirmed. It is assumed to be a 1.3-inch 128 × 64 monochrome OLED on I2C (usually an SH1106 driver at address 0x3C; some use an SSD1306). Check the driver before choosing the library. U8g2 (`olikraus/U8g2`) supports both.
-- It shows: measured temperature and humidity, set points, mode, which loads are running, the compressor rest countdown, and fault messages.
+- **DST-013**: a 1.3-inch 128 × 64 monochrome OLED on I2C, with pins VDD, GND, SCK and SDA. VDD goes to 3V3, SDA to GPIO 8 and SCK to GPIO 9.
+- The firmware uses U8g2 (`olikraus/U8g2`) and expects an SH1106 driver, which most 1.3-inch OLEDs have. If the picture is shifted by 2 pixels or garbled, it is an SSD1306: turn on `OLED_SSD1306` in `src/controller/config.h`.
+- It shows: measured temperature and humidity, set points, mode, which loads are running, the compressor rest countdown, the fan speed and RPM (or the pressure), and fault messages.
 
 ### Encoders
 
-Proposed use, to be confirmed:
+As built (the layout is still open to change, see section 5):
 
-- **Encoder 1:** turn to change the temperature set point. Push to change the mode (Off, Auto, Manual).
-- **Encoder 2:** turn to change the humidity set point. Long push to open the settings menu, where encoder 2 picks an item and encoder 1 changes its value.
+- **Encoder 1:** turn to change the temperature set point (0.1 °C a click). Push for the next mode (Off, Auto, Manual).
+- **Encoder 2:** turn to change the humidity set point (1 % a click). Long push (0.8 s) to open the settings menu.
+- **Settings menu:** encoder 2 picks an item and encoder 1 changes its value. A push on either runs an action ("Clear fan fault", "Exit"). A long push on encoder 2, or 60 s without input, goes back to the home screen. The manual relay switches only appear in Manual mode, and the simulated sensor values only when the simulated sensor is in use.
+- **Fault screen:** a push on either encoder acknowledges it.
 - With the final concentric encoder, the outer shaft does the job of encoder 1 and the inner shaft (with its push switch) the job of encoder 2.
 
-A change is sent to the Mainboard when the knob has been still for about 1 s, so the Mainboard does not save to flash on every click.
+A change is sent to the Mainboard when the knob has been still for 1 s, so the Mainboard does not save to flash on every click. The changed value is shown inverted until the Mainboard accepts it.
 
 ### Controller link
 
-A wired serial link. Proposed:
+A wired serial link. The message layout is in `include/link_protocol.h`, which both firmwares include, so they cannot drift apart.
 
-- UART at 115200 baud, 8N1. TX of each board to RX of the other, plus GND. The same cable can carry 5 V from the Mainboard side to power the Controller (4 cores: 5 V, GND, TX, RX).
-- For a cable longer than about 1 m, or one that runs near the compressor or mains wiring, put an RS-485 transceiver at each end (for example a 3.3 V MAX3485 module), using a twisted pair.
-- The Mainboard is in charge. It keeps the settings, and the Controller asks for them when it connects.
-- Every message has a start byte, a type, a length, the data and a CRC. A message with a bad CRC is dropped.
-- The Mainboard sends a status message every 1 s: temperature, humidity, pressure, mode, set points, each relay and why it is on, the fan speed command and measured RPM, the compressor rest time left, and the fault flags.
-- The Controller sends commands: set point changes, mode changes, settings changes, manual relay switches, and "clear fault". The Mainboard answers each command with an accept or reject, and the Controller shows the value only after it is accepted.
-- If the Controller hears no status message for 5 s, it shows "NO LINK TO MAINBOARD". The Mainboard keeps controlling with its saved settings.
-
-The message layout goes in one shared header that both firmwares include, so they cannot drift apart.
+- **Now:** plain UART at 115200 baud, 8N1, over a short cable. TX of each board to RX of the other, plus GND. The same cable carries 5 V from the Mainboard to power the Controller (4 cores: 5 V, GND, TX, RX).
+- **Later (~10 m cable):** a MAX485-type RS-485 module at each end, with a twisted pair for A/B and 120 Ω termination at both ends. DE and /RE are tied together and go to GPIO 4 (Mainboard) and GPIO 7 (Controller). The firmware already drives them, so no change is needed. **The MAX485 is a 5 V chip and its RO output is 5 V, which the ESP32 cannot take.** Use a 3.3 V part (MAX3485 or SP3485) powered from 3V3, or put a divider between RO and the ESP32's RX pin. If the 5 V supply is also sent down a 10 m cable, check the voltage drop at the Controller end.
+- The Mainboard is in charge. It keeps the settings, and the Controller asks for them when it connects or when they change.
+- Every message has a start byte, a type, a length, the data and a CRC-16. A message with a bad CRC is dropped.
+- The Mainboard sends a status message every 0.5 s: temperature, humidity, pressure, mode, set points, each relay, the demands, the fan speed command and measured RPM, the compressor rest time left, the fault flags and a settings revision number.
+- Only one side talks at a time, which RS-485 needs. Straight after each status message the Controller may send one message: "get settings" (when the revision number has changed) or one change. The Mainboard answers a change with accept or reject, and the Controller shows the value as accepted only then.
+- Changes: set points, mode, every setting, the simulated sensor, the manual relay switches, and "clear fan fault".
+- If the Controller hears no status message for 5 s, it shows "NO LINK TO MAINBOARD" and drops any changes not yet sent. The Mainboard keeps controlling with its saved settings.
 
 ### Sensor: AHT20 + BMP280 board
 
@@ -110,7 +118,7 @@ The fan has a 0-10 V speed input, referenced to its own control ground pin: 10 V
 - **The 0-10 V command follows the fan relay.** It is 0 V whenever the fan relay is off, and the set speed whenever the fan relay is on. When the relay switches on, the speed command is applied after it. When the relay switches off, the command goes to 0 V first.
 - Connect the converter's output ground to the fan's 0-10 V reference ground, and the converter's input ground to the Mainboard GND.
 - Many PWM to 0-10 V converters want a PWM signal of 1 to 3 kHz and an amplitude of 5 V or more. Check the one you have. If it will not read the ESP32's 3.3 V signal, add a transistor or level shifter between them.
-- The converter's output is not exactly linear. Calibrate it: set several duty cycles, measure the output with a meter, and store the result as a table or offset and scale.
+- The converter's output is not exactly linear. Calibrate it: set several duty cycles, measure the output with a meter, and set the duty cycles that give 0 V and 10 V (`FAN_PWM_DUTY_AT_0V` / `FAN_PWM_DUTY_AT_10V` in `src/mainboard/config.h`). The firmware uses a 1 kHz PWM.
 - The fan's 0-10 V input and tach output must be SELV (isolated from mains inside the fan). Check the fan's datasheet before connecting them to the Mainboard.
 
 ### Fan tach
@@ -119,7 +127,7 @@ The fan's tach output is an open collector with 1 pulse per revolution. It can s
 
 - Pull it up to 3.3 V with a resistor (4.7 kΩ to 10 kΩ, under 1 mA, well inside the 10 mA limit). Do not pull it up to 5 V or more, because the ESP32 input is not 5 V tolerant.
 - Add a small RC filter (for example 1 kΩ in series and 10 nF to GND at the ESP32 pin) to remove noise from the fan cable.
-- Count the pulses with the ESP32's pulse counter (PCNT) with its glitch filter on. At 1 pulse per revolution, RPM = pulses per second × 60. At low speed (a few pulses per second), measure the time between pulses instead, or average over a longer window.
+- The firmware counts the pulses with an interrupt, ignoring pulses less than 2 ms apart (glitches), and works out the RPM over a 2 s window: RPM = pulses per second × 60. That resolves 30 RPM, which is enough for the fault check.
 
 ### Before connecting real loads
 
@@ -145,7 +153,7 @@ The band stops the relays switching on and off rapidly around the set point. Eac
 | Dehumidify | RH ≥ Hs + Hb | RH ≤ Hs | Compressor |
 | Reheat (only while dehumidifying and the compressor is running) | T ≤ Ts | T ≥ Ts + Tb | Heater |
 
-- **Fan:** runs whenever the heater, humidifier or compressor runs. After they all stop, it keeps running for 30 s (the run-on time) to clear heat from the heater. It can also be set to run all the time. While the fan relay is on, the 0-10 V command is the fan speed setting (100 %). While it is off, the command is 0 V.
+- **Fan:** runs whenever the heater, humidifier or compressor runs. After they all stop, it keeps running for 30 s (the run-on time) to clear heat from the heater. It can also be set to run all the time. While the fan relay is on, the 0-10 V command is the fan speed setting (100 %, adjustable from 10 to 100 %). While it is off, the command is 0 V.
 - **Dehumidifying:** the compressor dries the air, but it also cools it. When the temperature is at or below the set point, the heater runs as well to hold the temperature (reheat). As the temperature moves, the controller switches between running the compressor alone and running the compressor plus the heater. When the humidity reaches the set point, both stop.
 - **Cool and heat** can never be on together, because of the bands.
 
@@ -167,16 +175,18 @@ The mode and the settings are saved on the Mainboard, so after a power cut the u
 
 If the sensor gives no valid reading for 30 s, Auto mode stops the heater, humidifier and compressor. The fan does its run-on. The display shows "SENSOR FAULT". The fault clears itself when valid readings come back. A simulated sensor fault can be switched on for testing.
 
+The simulated sensor is chosen from the Controller menu or the Mainboard's serial commands. The choice is never saved: the Mainboard always starts on the real sensor, so a power cut cannot leave it running on made-up readings.
+
 ### Fan fault
 
-If the fan relay is on and the speed command is above a minimum, but the tach reads below the fault threshold (proposed 200 RPM) for 15 s, after a 10 s spin-up allowance, that is a fan fault. Running the heater, compressor or humidifier without airflow is unsafe, so:
+If the fan relay is on (the speed command is then at least 10 %), but the tach reads below the fault threshold (200 RPM) for 15 s, after a 10 s spin-up allowance, that is a fan fault. Running the heater, compressor or humidifier without airflow is unsafe, so:
 
 - The heater, humidifier and compressor stop straight away (the compressor's minimum run time does not apply).
 - The fan stays commanded on, so it can recover.
 - The display shows "FAN FAULT" and the measured RPM.
 - The fault is latched: it stays until it is cleared on the Controller, and it comes back if the fan still does not turn.
 
-The threshold, the spin-up allowance and the delay can be changed in the settings. A fan fault also stops the other loads in Manual mode.
+The threshold, the spin-up allowance and the delay can be changed in the settings. A threshold of 0 turns the check off (for bench testing without a fan). A fan fault also stops the other loads in Manual mode.
 
 ### Faults on the display
 
@@ -202,29 +212,32 @@ Faults are shown on the OLED in place of the normal screen until acknowledged, a
 
 ### Phase 2: Mainboard firmware (ESP32 WROOM-32)
 
-- [ ] Build env for the Mainboard (`esp32dev`), with the pins from section 1.
-- [ ] Keep `controller.cpp` as the control rules (plain C++). Add the fan fault to it.
-- [ ] AHT20 + BMP280 driver. Read every 2 s, and average the last few readings.
-- [ ] Sensor fault after 30 s with no valid reading. Try to restart the I2C bus.
-- [ ] Optional temperature and humidity offset settings, for calibration against a reference.
-- [ ] Fan speed: PWM output to the 0-10 V converter, following the fan relay. Fan speed setting. Calibration of the converter.
-- [ ] Fan tach: RPM measurement with the pulse counter. Fan fault as in section 2.
-- [ ] Link: Mainboard side of the protocol (status every 1 s, commands with accept/reject).
-- [ ] Simulated sensor kept for testing, selectable from the Controller's settings menu and from the serial commands.
-- [ ] Remove the web page, JSON API and WiFi from the build (or put them behind a build flag), and `tools/test-control.ps1`'s HTTP use with them. Decide whether to keep WiFi for OTA updates (section 5).
-- [ ] Replace `tools/test-control.ps1` with a test that drives the Mainboard over its serial port, and run the section 4 test list.
-- [ ] Bump `SETTINGS_VERSION` for the new settings (fan speed, fan fault, offsets).
+- [x] Build env for the Mainboard (`pio run -e mainboard`), with the pins from section 1.
+- [x] Control rules kept as plain C++ (`src/mainboard/climate_control.cpp`), with the fan fault added. Host tests in `tools/host-test/`.
+- [x] AHT20 + BMP280 driver. Read every 2 s, and average the last 4 readings.
+- [x] Sensor fault after 30 s with no valid reading. Re-tries the sensor every 10 s and frees a stuck I2C bus.
+- [x] Temperature and humidity offset settings, for calibration against a reference.
+- [x] Fan speed: PWM output to the 0-10 V converter, following the fan relay. Fan speed setting. Calibration constants in `config.h`.
+- [x] Fan tach: RPM measurement. Fan fault as in section 2.
+- [x] Link: Mainboard side of the protocol.
+- [x] Simulated sensor kept for testing, selectable from the Controller's settings menu and from the serial commands.
+- [x] Web page, JSON API, WiFi, OTA and the ESP8266 builds removed (last in commit `65d825e`), with `tools/test-control.ps1`. Decide whether to bring back WiFi for OTA updates (section 5).
+- [x] `SETTINGS_VERSION` bumped to 2 for the new settings.
+- [ ] You: flash the Mainboard, check each relay, the 0-10 V output and the tach in Manual mode, and calibrate the converter.
+- [ ] A test script that drives the Mainboard over its serial port and runs the section 4 test list (the serial commands already cover it).
 
 ### Phase 3: Controller firmware (ESP32-C3 SuperMini)
 
-- [ ] Build env for the Controller (ESP32-C3 SuperMini).
-- [ ] Confirm the DST-013 display driver (SH1106 or SSD1306) and get it working with U8g2.
-- [ ] Read both encoders and their push switches, with debouncing.
-- [ ] Main screen: temperature, humidity, set points, mode, running loads, compressor countdown.
-- [ ] Set point and mode changes on the encoders, sent to the Mainboard.
-- [ ] Settings menu: bands, fan mode, fan speed, run-on time, compressor times, fan fault settings, sensor offsets, real or simulated sensor, manual relay switches.
-- [ ] Fault messages as in section 2, and "clear fault".
-- [ ] Link: Controller side of the protocol, with the 5 s link timeout.
+- [x] Build env for the Controller (`pio run -e controller`).
+- [x] Display with U8g2, SH1106 by default, SSD1306 selectable in `config.h`.
+- [x] Read both encoders (interrupts, full quadrature decode) and their push switches, with debouncing and long press.
+- [x] Home screen: temperature, humidity, set points, mode, running loads, compressor countdown, fan speed and RPM.
+- [x] Set point and mode changes on the encoders, sent to the Mainboard.
+- [x] Settings menu: bands, fan mode, fan speed, run-on time, compressor times, fan fault settings, sensor offsets, real or simulated sensor, manual relay switches.
+- [x] Fault messages as in section 2, and "clear fan fault".
+- [x] Link: Controller side of the protocol, with the 5 s link timeout.
+- [ ] You: flash the Controller, check the display driver, the encoder directions and steps per click (`config.h`), and run the section 4 test list from the Controller.
+- [ ] RS-485 modules for the ~10 m cable (see "Controller link").
 - [ ] Later: change to one concentric rotary encoder.
 
 ### Phase 4: safety and alarms
@@ -261,7 +274,7 @@ Use the simulated sensor, and set the compressor minimum off and run times to 0 
 3. T 22.6: the compressor and fan come on (cooling), and the 0-10 V output goes to the fan speed. T 22.2: they stay on. T 22.0: they stop, and the fan runs on, then the 0-10 V output goes to 0 V.
 4. T 21.4: the heater and fan come on. T 22.0: the heater stops.
 5. T 22.0, RH 46: the humidifier and fan come on. RH 50: the humidifier stops.
-6. T 22.0, RH 54: the compressor, heater (reheat) and fan come on. T 22.6: the heater stops and the compressor keeps running. RH 50: the compressor stops.
+6. T 22.0, RH 54: the compressor, heater (reheat) and fan come on. T 22.6: the heater stops and the compressor keeps running. T 22.0: the heater comes back on. RH 50: the compressor and heater stop, and the fan runs on.
 7. Turn on sensor fault: the compressor, heater and humidifier stop. The display shows SENSOR FAULT.
 8. Set the compressor minimum off time back to 180 s. Make the compressor stop, then start it again: the display counts down before it restarts.
 9. With the fan running, stop it turning (disconnect the tach, or hold the input low): after the spin-up allowance and delay, the heater, humidifier and compressor stop and the display shows FAN FAULT. Reconnect it and clear the fault on the Controller: normal control resumes.
@@ -276,7 +289,7 @@ Use the simulated sensor, and set the compressor minimum off and run times to 0 
 4. Should the unit always start in Off after a power cut, instead of returning to its last mode?
 5. Fan speed: is one fixed speed setting enough, or should the speed depend on the demand (for example lower when dehumidifying)? Is there a minimum speed the fan needs?
 6. Fan fault: is the proposed behaviour right (other loads stop, fan stays on, latched until cleared)? What RPM does the fan reach at full speed, so the threshold can be set sensibly?
-7. Is the DST-013 an SH1106 or SSD1306 OLED, and is it 1.3-inch 128 × 64 on I2C?
-8. How long will the cable between the Controller and the Mainboard be? Over about 1 m, RS-485 is safer than plain UART.
-9. With no web page, should the Mainboard keep WiFi only for over-the-air firmware updates, or be USB-only?
-10. Is the proposed encoder layout (encoder 1 for temperature and mode, encoder 2 for humidity and the menu) what you want?
+7. With no web page, should the Mainboard get WiFi back only for over-the-air firmware updates, or stay USB-only?
+8. Is the encoder layout (encoder 1 for temperature and mode, encoder 2 for humidity and the menu) what you want?
+
+Answered: the display is a 1.3-inch I2C OLED (VDD, GND, SCK, SDA) on GPIO 8/9. The link is plain UART for now, with MAX485 RS-485 modules later for a ~10 m cable. The proposed Mainboard pin map is accepted.

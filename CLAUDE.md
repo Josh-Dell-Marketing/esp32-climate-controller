@@ -12,71 +12,73 @@ A temperature and humidity controller for a small AC/climate unit, built from tw
 There is **no web page in the current scope**. Everything is configured on the Controller.
 
 - `PLAN.md` has the hardware and pin plan, the link protocol, the control rules, phases with checkboxes, the test list and the open questions. It is the project plan. Keep its checkboxes up to date when you finish something.
-- The current status is in `PLAN.md` section 3. Phase 1 (control logic + simulated sensor, built on an ESP8266 with a web page) is done. **Next up is Phase 2: the Mainboard firmware on the ESP32** (sensor, fan speed and tach, fan fault, link). Then Phase 3 (Controller firmware), Phase 4 (safety and alarms) and Phase 5 (final hardware).
+- The current status is in `PLAN.md` section 3. Phase 1 (control logic + simulated sensor, on an ESP8266 with a web page) is done. The firmware for both new boards (Phases 2 and 3) is written and builds, but **has not been run on hardware yet**. Next: bench-test both boards, then Phase 4 (safety and alarms) and Phase 5 (final hardware).
 
 ## Repo map
 
-What is in the repo today. Most of it is from Phase 1 (ESP8266 + web page) and is the starting point for the Mainboard firmware.
-
 ```
-platformio.ini            Firmware build envs (see below)
-src/main.cpp              Relays, web server, WiFi/AP fallback, OTA, serial commands (Phase 1)
-src/controller.{h,cpp}    Control rules. Plain C++, no Arduino calls (keep it that way: unit-testable)
-src/sim_room.h            Simulated sensor + "room reacts" model (keep for testing)
-src/storage.{h,cpp}       Settings saved to flash (LittleFS on ESP8266, NVS on ESP32)
-include/config.h          Pins, active-low/high, network names
-include/web_ui.h          The Phase 1 web page (to be removed or put behind a build flag)
-include/secrets.example.h Copy to include/secrets.h (git-ignored) and fill in WiFi + passwords
-tools/test-control.ps1    Phase 1 control-rule tests over HTTP (to be replaced by a serial test)
-hardware/                 KiCad 10 project for the ESP8266 relay carrier PCB (see hardware/README.md)
-hardware/gen/             Python generator: design.py is the single source of truth for the PCB
-hardware/sim/             ngspice simulations of the PCB (SIM_REPORT.md)
-hardware/case/            CadQuery enclosure + fit check (CASE.md)
+platformio.ini                 Build envs: mainboard (esp32dev), controller (esp32-c3-devkitm-1)
+include/link_protocol.h        Link framing, message structs and the item table. Shared by both firmwares
+src/mainboard/main.cpp         Mainboard: relays, fan output order, link, USB serial commands
+src/mainboard/climate_control.{h,cpp}  Control rules + FanMonitor. Plain C++, no Arduino calls (keep it that way: unit-testable)
+src/mainboard/sensor.{h,cpp}   AHT20 + BMP280: read every 2 s, average, 30 s fault timeout, I2C bus recovery
+src/mainboard/fan.{h,cpp}      LEDC PWM to the 0-10 V converter, tach interrupt and RPM
+src/mainboard/storage.{h,cpp}  Settings saved to NVS
+src/mainboard/sim_room.h       Simulated sensor + "room reacts" model (for testing)
+src/mainboard/config.h         Mainboard pins and timings
+src/controller/main.cpp        Controller: OLED screens, menu, pending changes, link
+src/controller/input.h         Encoder (interrupt quadrature decode) and Button (debounce, long press)
+src/controller/config.h        Controller pins and timings
+tools/host-test/               g++ tests of the control rules, FanMonitor and link framing
+hardware/                      KiCad 10 project for the Phase 1 ESP8266 relay carrier PCB (on hold)
+hardware/gen/                  Python generator: design.py is the single source of truth for the PCB
+hardware/sim/                  ngspice simulations of the PCB (SIM_REPORT.md)
+hardware/case/                 CadQuery enclosure + fit check (CASE.md)
 ```
 
-Planned (not there yet): a separate build for the Controller firmware, and one shared header for the link messages that both firmwares include. Keep `controller.{h,cpp}` on the Mainboard side only; the Controller never makes control decisions.
+The Phase 1 ESP8266 firmware (web page, WiFi, OTA, `tools/test-control.ps1`) was removed. The last commit with it is `65d825e`.
 
 ## Setting up on a new machine
 
 The original setup is Windows 11 with PowerShell. Paths below assume that; adjust on macOS/Linux.
 
-1. **Firmware:** install VS Code + the PlatformIO IDE extension. The CLI is at `%USERPROFILE%\.platformio\penv\Scripts\pio.exe`. The first build downloads the toolchain, which takes a few minutes.
-2. `copy include\secrets.example.h include\secrets.h` and fill in WiFi (needed while the Phase 1 web/WiFi code is still in the build). Never commit `secrets.h`.
-3. **Hardware (optional):** install KiCad 10 (scripts expect `C:\Program Files\KiCad\10.0`). The generators run on KiCad's bundled Python (`C:\Program Files\KiCad\10.0\bin\python.exe`), which has `pcbnew` and numpy.
-4. **Simulation (optional):** `cd hardware\sim`, then `py -3.12 -m venv .venv` and `.venv\Scripts\pip install numpy matplotlib`. Run `.venv\Scripts\python run_sim.py`. It drives KiCad's `ngspice.dll` through ctypes, so it needs KiCad 10 installed too.
-5. **Case (optional):** `cd hardware\case`, then `py -3.12 -m venv .venv` and `.venv\Scripts\pip install cadquery`. Run `hardware\build.ps1 -Fab` first, because `fit_check.py` needs the board STEP. `.venv\Scripts\python case.py` rebuilds the parts, and `.venv\Scripts\python fit_check.py` must report `"PASS": true`. See `CASE.md`.
-6. USB drivers: the WROOM-32 DevKit usually needs CP210x (Silicon Labs) or CH340, depending on the board. The ESP32-C3 SuperMini uses the chip's built-in USB and normally needs no driver.
+1. **Firmware:** install VS Code + the PlatformIO IDE extension. The CLI is at `%USERPROFILE%\.platformio\penv\Scripts\pio.exe`. The first build downloads the ESP32 toolchains (Xtensa and RISC-V), which takes a few minutes. No secrets file is needed any more.
+2. **Hardware (optional):** install KiCad 10 (scripts expect `C:\Program Files\KiCad\10.0`). The generators run on KiCad's bundled Python (`C:\Program Files\KiCad\10.0\bin\python.exe`), which has `pcbnew` and numpy.
+3. **Simulation (optional):** `cd hardware\sim`, then `py -3.12 -m venv .venv` and `.venv\Scripts\pip install numpy matplotlib`. Run `.venv\Scripts\python run_sim.py`. It drives KiCad's `ngspice.dll` through ctypes, so it needs KiCad 10 installed too.
+4. **Case (optional):** `cd hardware\case`, then `py -3.12 -m venv .venv` and `.venv\Scripts\pip install cadquery`. Run `hardware\build.ps1 -Fab` first, because `fit_check.py` needs the board STEP. `.venv\Scripts\python case.py` rebuilds the parts, and `.venv\Scripts\python fit_check.py` must report `"PASS": true`. See `CASE.md`.
+5. USB drivers: the WROOM-32 DevKit usually needs CP210x (Silicon Labs) or CH340, depending on the board. The ESP32-C3 SuperMini uses the chip's built-in USB and normally needs no driver.
 
 ## Firmware
 
 | Command | What |
 |---|---|
-| `pio run -e esp32dev` | ESP32 WROOM-32 DevKit: the **Mainboard** (pins in `config.h`) |
-| `pio run -e nodemcuv2` | Phase 1: NodeMCU (ESP8266) + a relay **module** (relays active LOW) |
-| `pio run -e nodemcuv2-pcb` | Phase 1: NodeMCU on the ESP8266 PCB (relays active HIGH, `-DCLIMATE_PCB`) |
-| `pio run -e <env> -t upload` | Flash over USB |
-| `pio device monitor` | Serial at 115200. Commands: `status`, `mode off/auto/manual`, `temp 23.5`, `hum 60` |
+| `pio run` | Builds both |
+| `pio run -e mainboard -t upload` | Flash the Mainboard (ESP32 WROOM-32 DevKit) |
+| `pio run -e controller -t upload` | Flash the Controller (ESP32-C3 SuperMini). If it won't connect: hold BOOT, tap RESET, release BOOT |
+| `--upload-port COM5` / `--monitor-port` | Pick the board when both are plugged in |
+| `pio device monitor -e mainboard` | Mainboard serial at 115200. `help` lists the commands (`status`, `mode`, `sensor real/sim`, `temp`, `hum`, `relay`, `set <name> <value>`, ...) |
+| `g++ -std=c++17 -Isrc/mainboard -Iinclude tools/host-test/test_control.cpp src/mainboard/climate_control.cpp -o test_control && ./test_control` | Host tests, no board needed |
 
-A Controller env (ESP32-C3 SuperMini) is to be added in Phase 3. The ESP8266 envs, the `ota` env and the web/WiFi code are Phase 1 leftovers; remove them only as part of the Phase 2 checklist.
+- **Mainboard pins (`src/mainboard/config.h`):** relays Fan 26, Heater 27, Humidifier 32, Compressor 33 (relay board active LOW by default: `RELAY_ACTIVE_LOW`). I2C SDA 21, SCL 22. Fan PWM 25. Fan tach 34 (input only: external pull-up to 3.3 V, never 5 V). Link UART2 TX 17, RX 16, RS-485 DE 4. Avoid strapping pins 0, 2, 5, 12, 15 for outputs, and 6 to 11 (flash).
+- **Controller pins (`src/controller/config.h`):** OLED SDA 8, SCK 9 (1.3" I2C, SH1106 by default, `OLED_SSD1306` to switch). Encoder 1 A/B/push 0/1/3. Encoder 2 A/B/push 4/5/10. Link UART1 TX 21, RX 20, RS-485 DE 7. USB is on 18/19. GPIO 2, 8, 9 are strapping pins.
+- If you change a pin, change `config.h`, `PLAN.md` section 1 and `README.md` together.
+- **Link (`include/link_protocol.h`):** UART 115200 8N1 now; MAX485 RS-485 modules later for ~10 m (DE pins already driven; the MAX485's 5 V RO output needs a divider, or use a 3.3 V MAX3485). Frames: `0xA5, type, len, payload, CRC-16`. The Mainboard sends STATUS every 0.5 s and nothing else unasked. The Controller may send ONE frame right after each STATUS (GET_SETTINGS or SET); the Mainboard answers with SETTINGS or ACK. Keep that rule: it is what makes half-duplex RS-485 work. Values are `LinkItem`s as scaled `int16` (x10 for °C/%RH). **Bump `LINK_PROTOCOL_VERSION` when a payload struct changes**, and keep `linkItemInfo()` in step with `sanitize()`.
+- The Mainboard owns all settings and makes all control decisions. The Controller only displays and sends changes. A change is shown as pending (inverted) until the Mainboard's ACK.
+- Control rules (bands, reheat while dehumidifying, fan run-on, compressor min off/on times, sensor-fault and fan-fault shutdown) live in `src/mainboard/climate_control.cpp`. They are specified in `PLAN.md` section 2. If you change behaviour, update `PLAN.md`, the test list and `tools/host-test/`, and run the host tests.
+- **The 0-10 V command follows the fan relay**: `updateOutputs()` in `src/mainboard/main.cpp` sets it to 0 before opening the relay and to the speed setting after closing it.
+- `Settings` is saved as a raw struct. **Bump `SETTINGS_VERSION` in `src/mainboard/storage.cpp` whenever `Settings` changes** (now 2), otherwise old flash data is misread.
+- The simulated-sensor choice, sim values and manual switches are never saved: the Mainboard always boots on the real sensor with everything off.
+- Before committing firmware changes, `pio run` (both envs) must build and the host tests must pass.
 
-- **Mainboard pins (proposed, see `PLAN.md` section 1):** relays Fan 26, Heater 27, Humidifier 32, Compressor 33. I2C SDA 21, SCL 22 (sensor). Fan speed PWM 25. Fan tach 34 (input only: needs an external pull-up to 3.3 V, never 5 V). Link UART2 TX 17, RX 16. Avoid strapping pins 0, 2, 5, 12, 15 for outputs, and 6 to 11 (flash).
-- **Controller pins (proposed):** OLED SDA 8, SCL 9. Encoder 1 A/B/push 0/1/3. Encoder 2 A/B/push 4/5/10. Link UART1 TX 21, RX 20. USB is on 18/19. GPIO 2, 8, 9 are strapping pins.
-- If you change a pin, change `config.h` and `PLAN.md` together. The ESP8266 PCB's `CHANNELS` in `hardware/gen/design.py` only matches the Phase 1 NodeMCU pins.
-- **Link:** UART 115200 8N1 (RS-485 if the cable is long). Framed messages with a CRC. The Mainboard owns the settings and sends status every 1 s; the Controller sends commands and waits for accept/reject. The Controller shows "NO LINK TO MAINBOARD" after 5 s without status. The Mainboard keeps controlling if the link is lost. Details in `PLAN.md` section 1.
-- Control rules (bands, reheat while dehumidifying, fan run-on, compressor min off/on times, sensor-fault and fan-fault shutdown) live in `src/controller.cpp`. They are specified in `PLAN.md` section 2. If you change behaviour, update `PLAN.md` and the test list, and run the tests.
-- `Settings` is saved as a raw struct. **Bump `SETTINGS_VERSION` in `src/storage.cpp` whenever `Settings` changes**, otherwise old flash data is misread.
-- Before committing firmware changes, every env in `platformio.ini` must build.
+### Bench-test notes (next job)
 
-### Phase 2 notes (next job: Mainboard)
-
-- **Sensor:** AHT20 (temp + RH, I2C 0x38) and BMP280 (pressure + temp, 0x76 or 0x77) on one board, I2C at 100 kHz. Control uses the AHT20. Read every 2 s and average a few readings. Raise a sensor fault after 30 s with no valid reading. There is a `Reading` struct with a `valid` flag, and `Controller` already handles faults. Libraries: `adafruit/Adafruit AHTX0` and `adafruit/Adafruit BMP280 Library` via `lib_deps`.
-- **Fan speed:** LEDC PWM into the PWM to 0-10 V converter. The 0-10 V command follows the fan relay: 0 V whenever the relay is off, the speed setting whenever it is on (command to 0 before the relay opens). Check the converter's PWM frequency and input level (many want 5 V or more), and calibrate its output.
-- **Fan tach:** pull-up to 3.3 V (4.7-10 kΩ) plus a small RC filter. Count with PCNT. RPM = pulses/s × 60. **Fan fault:** fan relay on and speed above minimum, but RPM below the threshold (proposed 200) for 15 s after a 10 s spin-up allowance. It stops the heater, humidifier and compressor, keeps the fan on, and is latched until cleared from the Controller.
-- Keep the simulated sensor, selectable from the Controller menu and the serial commands.
+- **Sensor:** AHT20 at 0x38, BMP280 at 0x76 or 0x77 (pressure only shown if found). I2C at 100 kHz. Library calls are in `sensor.cpp` (`adafruit/Adafruit AHTX0`, `adafruit/Adafruit BMP280 Library`).
+- **Fan:** check the converter responds to a 3.3 V, 1 kHz PWM (many want 5 V or more: add a level shifter if not), then calibrate `FAN_PWM_DUTY_AT_0V/10V`. Tach: 10 kΩ pull-up to 3V3, 1 kΩ series, 10 nF to GND. Fan fault defaults: below 200 RPM for 15 s after 10 s spin-up; `fanfaultrpm 0` turns it off for bench work without a fan.
+- **Controller:** check `ENC_STEPS_PER_DETENT` and `ENC1/2_REVERSE` against the real encoders, and the display driver.
 
 ## Hardware (KiCad)
 
-The PCB in `hardware/` is the **Phase 1 ESP8266 design** (plug-in NodeMCU v2, SHT31-D connector). It does not fit the WROOM-32 Mainboard. Whether to rework it or use an off-the-shelf relay board is an open item in `PLAN.md` Phase 5. The rules below apply to any work on it.
+The PCB in `hardware/` is the **Phase 1 ESP8266 design** (plug-in NodeMCU v2, SHT31-D connector). It does not fit the WROOM-32 Mainboard, and its `nodemcuv2-pcb` firmware env is gone (commit `65d825e` has it). Whether to rework it or use an off-the-shelf relay board is an open item in `PLAN.md` Phase 5. The rules below apply to any work on it.
 
 - **Never hand-edit `hardware/*.kicad_sch` / `*.kicad_pcb` and expect it to stick.** They are generated. Change `hardware/gen/design.py` (parts, values, nets, placement), or the generator scripts, then run:
   ```
@@ -99,7 +101,7 @@ The PCB in `hardware/` is the **Phase 1 ESP8266 design** (plug-in NodeMCU v2, SH
   - In PowerShell, `$fab` and a `-Fab` switch are the same variable (case-insensitive).
   - Never put `\"` at the end of a native argument (`-o "dir\"`), because it escapes the quote. Use `dir/`.
   - Running downloaded executables (e.g. the Freerouting CLI) was blocked by the permission policy on the original machine. That's why routing is done by `router.py`.
-- The NodeMCU footprint assumes a **v2 "Amica" board with 22.86 mm row spacing** (CP2102). The LoLin v3 (27.9 mm) does not fit. **The PCB's relays are active HIGH** (`nodemcuv2-pcb`).
+- The NodeMCU footprint assumes a **v2 "Amica" board with 22.86 mm row spacing** (CP2102). The LoLin v3 (27.9 mm) does not fit. **The PCB's relays are active HIGH** (`RELAY_ACTIVE_LOW = false`).
 
 ## Safety (keep these in docs and designs)
 
@@ -112,16 +114,15 @@ The PCB in `hardware/` is the **Phase 1 ESP8266 design** (plug-in NodeMCU v2, SH
 
 - Keep docs in plain, direct English. When behaviour changes, update `README.md`, `PLAN.md`, `hardware/README.md`, or `CASE.md`, whichever applies.
 - Small, focused commits. Run the relevant checks first: firmware builds, `build.ps1`, `run_sim.py`, `fit_check.py`.
-- Don't commit secrets, `.pio/`, `hardware/build/` or any `.venv/`.
+- Don't commit secrets, `.pio/`, `hardware/build/`, any `.venv/` or host-test binaries.
 - Licences: firmware, scripts and docs are MIT (`LICENSE`); everything in `hardware/` is CERN-OHL-P-2.0 (`hardware/LICENSE`). Don't add code or models with incompatible terms (e.g. copied without permission or under a non-commercial licence).
 
 ## Open questions for the project owner (from PLAN.md section 5)
 
 1. Have the dehumidify reheat rule and the "too hot + too dry" behaviour been read correctly?
 2. Should the unit start in Off after a power cut, instead of resuming the last mode?
-3. Fan speed: one fixed setting, or different per demand? Is there a minimum speed?
-4. Is the proposed fan-fault behaviour right, and what is the fan's full-speed RPM?
-5. Which driver does the DST-013 OLED use (SH1106 or SSD1306)?
-6. How long is the Controller–Mainboard cable (UART or RS-485)?
-7. Keep WiFi on the Mainboard just for OTA updates, or USB-only?
-8. Is the proposed encoder layout right?
+3. Does the fan need to run whenever the heater is on? (It does now.)
+4. Fan speed: one fixed setting, or different per demand? Is there a minimum speed?
+5. Is the fan-fault behaviour right, and what is the fan's full-speed RPM?
+6. Bring WiFi back on the Mainboard just for OTA updates, or stay USB-only?
+7. Is the encoder layout right?
