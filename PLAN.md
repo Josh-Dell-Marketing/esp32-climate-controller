@@ -1,6 +1,6 @@
 # Climate Controller: Project Plan
 
-An ESP32 controls a temperature and humidity unit through 4 relays: fan, heater, humidifier and compressor. It holds a temperature set point and a humidity set point. A second ESP32 acts as a controller, with a small LCD screen and rotary encoder (for testing there will be 2 encoders, in final version this will change to one concentric rotary encoder). This will be connected to the main controller via a wired connection, and is responsible for user interface operation, such as changes to setpoint, configuration settings, and reporting of current measured temperature and humidity levels. 
+An ESP32 controls a temperature and humidity unit through 4 relays: fan, heater, humidifier and compressor. It holds a temperature set point and a humidity set point. A second ESP32 acts as a controller, with a small LCD screen and rotary encoder with switch (for testing there will be 2 encoders, in final version this will change to one concentric rotary encoder). This will be connected to the main controller via a wired connection, and is responsible for user interface operation, such as changes to setpoint, configuration settings, and reporting of current measured temperature and humidity levels. 
 
 Status, 13 Nov 2026: Phase 1 is built. There is no sensor yet, so the web page has a simulated sensor.
 
@@ -18,6 +18,8 @@ Status, 13 Nov 2026: Phase 1 is built. There is no sensor yet, so the web page h
 The relay module also needs VCC to VIN (5 V) and GND to GND.
 
 D1 and D2 are kept free for the I2C sensor. The compressor is on D6 because that pin stays quiet while the board boots, so the compressor cannot click on during a reset.
+### Fan Control
+The fan used will have a 0-10v input for speed control referenced to a ground pin, with 10v being maximum commanded rotation and 0v being no rotation. When switching the fan relay, it is important this is combined with the relevant pin for 0-10
 
 ### Sensor (for development)
 
