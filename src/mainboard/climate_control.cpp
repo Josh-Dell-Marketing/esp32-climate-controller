@@ -1,4 +1,4 @@
-#include "controller.h"
+#include "climate_control.h"
 
 namespace {
 template <typename T>
@@ -19,27 +19,40 @@ bool sanitize(Settings &s) {
   changed |= clampTo<uint16_t>(s.compMinOffSec, 0, 900);
   changed |= clampTo<uint16_t>(s.compMinOnSec, 0, 900);
   changed |= clampTo<uint16_t>(s.fanRunOnSec, 0, 600);
+  changed |= clampTo<uint8_t>(s.fanSpeedPct, 10, 100);
+  changed |= clampTo<uint16_t>(s.fanFaultRpm, 0, 5000);
+  changed |= clampTo<uint16_t>(s.fanSpinupSec, 0, 120);
+  changed |= clampTo<uint16_t>(s.fanFaultDelaySec, 5, 300);
+  changed |= clampTo(s.tempOffset, -5.0f, 5.0f);
+  changed |= clampTo(s.humOffset, -10.0f, 10.0f);
   if ((uint8_t)s.mode > (uint8_t)Mode::Manual) { s.mode = Mode::Off; changed = true; }
   if ((uint8_t)s.fanMode > (uint8_t)FanMode::AlwaysOn) { s.fanMode = FanMode::Auto; changed = true; }
   return changed;
 }
 
-void Controller::begin(uint32_t nowMs) {
+void ClimateControl::begin(uint32_t nowMs) {
   compOn_ = false;
   compChangedMs_ = nowMs;
   resetDemands();
 }
 
-void Controller::resetDemands() {
+void ClimateControl::resetDemands() {
   cool_ = heat_ = humidify_ = dehum_ = reheat_ = false;
 }
 
-void Controller::update(const Settings &s, const Reading &r, const bool manual[RELAY_TOTAL], uint32_t now) {
+void ClimateControl::update(const Settings &s, const Reading &r, bool fanFault,
+                            const bool manual[RELAY_TOTAL], uint32_t now) {
   Status st;
   bool want[RELAY_TOTAL] = {};
+  st.fanFault = fanFault;
 
   // ---- 1. Work out what each load should do -------------------------------
-  if (s.mode == Mode::Auto) {
+  if (fanFault && s.mode != Mode::Off) {
+    // No airflow: running the heater, humidifier or compressor is unsafe.
+    resetDemands();
+    st.sensorFault = s.mode == Mode::Auto && !r.valid;
+    st.reason[HEATER] = st.reason[HUMIDIFIER] = st.reason[COMPRESSOR] = "Fan fault";
+  } else if (s.mode == Mode::Auto) {
     if (!r.valid) {
       resetDemands();
       st.sensorFault = true;
@@ -104,9 +117,10 @@ void Controller::update(const Settings &s, const Reading &r, const bool manual[R
       st.reason[COMPRESSOR] = "Waiting: compressor resting";
     }
   } else if (!want[COMPRESSOR] && compOn_) {
-    // Minimum run time only applies to normal Auto control. Off, Manual and a
-    // sensor fault stop the compressor straight away.
-    const bool holdOn = s.mode == Mode::Auto && !st.sensorFault && compElapsedSec < s.compMinOnSec;
+    // Minimum run time only applies to normal Auto control. Off, Manual, a
+    // sensor fault and a fan fault stop the compressor straight away.
+    const bool holdOn = s.mode == Mode::Auto && !st.sensorFault && !fanFault &&
+                        compElapsedSec < s.compMinOnSec;
     if (holdOn) {
       st.reason[COMPRESSOR] = "Minimum run time";
     } else {
@@ -137,7 +151,10 @@ void Controller::update(const Settings &s, const Reading &r, const bool manual[R
   const bool runOn = !othersOn && othersEverOn_ &&
                      (uint32_t)(now - othersLastOnMs_) < (uint32_t)s.fanRunOnSec * 1000UL;
 
-  if (othersOn) {
+  if (fanFault && s.mode != Mode::Off) {
+    st.relay[FAN] = true;  // keep trying, so the fan can recover
+    st.reason[FAN] = "Fan fault: tach too slow";
+  } else if (othersOn) {
     st.relay[FAN] = true;
     st.reason[FAN] = "Other equipment running";
   } else if (runOn) {

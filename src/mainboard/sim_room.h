@@ -1,10 +1,11 @@
 #pragma once
-// Stand-in for a real sensor until one is wired in (PLAN.md Phase 1).
-// Values are typed in on the web page. With "react" on, the relays move the
-// values, so you can watch the controller work. The rates are much faster
+// Simulated sensor and "room reacts" model, for testing without real loads.
+// Selected at run time from the Controller menu or the serial commands. The
+// Mainboard always boots on the real sensor. With "react" on, the relays move
+// the values, so you can watch the controller work. The rates are much faster
 // than a real room so a full cycle takes a minute or two.
 
-#include "controller.h"
+#include "climate_control.h"
 
 struct SimRoom {
   float temp = 22.0f;
