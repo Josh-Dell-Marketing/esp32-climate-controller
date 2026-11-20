@@ -4,7 +4,7 @@ Guidance for Claude Code (and humans) working in this repo. Read this first, the
 
 ## What this is
 
-A temperature and humidity controller for a small AC/climate unit. An ESP8266 (NodeMCU v2) switches 4 relays (fan, heater, humidifier, compressor) to hold a temperature set point and a humidity set point. It has a web page and JSON API, a simulated sensor for development, a custom relay carrier PCB (KiCad 10), SPICE simulations of that PCB, and a 3D-printable case.
+A temperature and humidity controller for a small AC/climate unit. An ESP32 switches 4 relays (fan, heater, humidifier, compressor) to hold a temperature set point and a humidity set point. It has a web page and JSON API, a simulated sensor for development, a custom relay carrier PCB (KiCad 10), SPICE simulations of that PCB, and a 3D-printable case.
 
 - `PLAN.md` has the control rules, phases with checkboxes, the test list and the open questions. It is the project plan. Keep its checkboxes up to date when you finish something.
 - The current status is in `PLAN.md` section 3. Phases 1 (control logic + simulated sensor) and 5 (PCB and case design) are done. **Next up is Phase 2: the real SHT31-D sensor.** After that come Phase 3 (safety and alarms) and Phase 4 (history and remote access).
