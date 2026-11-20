@@ -85,6 +85,9 @@ The mode and the settings are saved, so after a power cut the unit returns to it
 
 If the sensor gives no valid reading, Auto mode stops the heater, humidifier and compressor. In Phase 1 you can test this with a "sensor fault" switch on the web page. In Phase 2 a fault means no valid reading for 30 s.
 
+### Fan fault ###
+If the fan tach output drops below 6 pulses/second the system will de-energise all relays and a "Fan fault" message shall appear
+
 ## 3. Phases
 
 ### Phase 1: control logic and simulated sensor (done)
