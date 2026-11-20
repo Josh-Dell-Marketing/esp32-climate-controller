@@ -30,6 +30,8 @@ src/controller/main.cpp        Controller: OLED screens, menu, pending changes, 
 src/controller/input.h         Encoder (interrupt quadrature decode) and Button (debounce, long press)
 src/controller/config.h        Controller pins and timings
 tools/host-test/               g++ tests of the control rules, FanMonitor and link framing
+tools/make_bench_diagram.py    Writes docs/bench-wiring.svg (breadboard wiring). Pins must match both config.h files
+docs/BENCH_SETUP.md            Bench wiring checklist, Windows 11 flashing steps, first checks
 hardware/                      KiCad 10 project for the Phase 1 ESP8266 relay carrier PCB (on hold)
 hardware/gen/                  Python generator: design.py is the single source of truth for the PCB
 hardware/sim/                  ngspice simulations of the PCB (SIM_REPORT.md)
@@ -61,7 +63,7 @@ The original setup is Windows 11 with PowerShell. Paths below assume that; adjus
 
 - **Mainboard pins (`src/mainboard/config.h`):** relays Fan 26, Heater 27, Humidifier 32, Compressor 33 (relay board active LOW by default: `RELAY_ACTIVE_LOW`). I2C SDA 21, SCL 22. Fan PWM 25. Fan tach 34 (input only: external pull-up to 3.3 V, never 5 V). Link UART2 TX 17, RX 16, RS-485 DE 4. Avoid strapping pins 0, 2, 5, 12, 15 for outputs, and 6 to 11 (flash).
 - **Controller pins (`src/controller/config.h`):** OLED SDA 8, SCK 9 (1.3" I2C, SH1106 by default, `OLED_SSD1306` to switch). Encoder 1 A/B/push 0/1/3. Encoder 2 A/B/push 4/5/10. Link UART1 TX 21, RX 20, RS-485 DE 7. USB is on 18/19. GPIO 2, 8, 9 are strapping pins.
-- If you change a pin, change `config.h`, `PLAN.md` section 1 and `README.md` together.
+- If you change a pin, change `config.h`, `PLAN.md` section 1, `README.md`, `docs/BENCH_SETUP.md` and `tools/make_bench_diagram.py` (then run it) together.
 - **Link (`include/link_protocol.h`):** UART 115200 8N1 now; MAX485 RS-485 modules later for ~10 m (DE pins already driven; the MAX485's 5 V RO output needs a divider, or use a 3.3 V MAX3485). Frames: `0xA5, type, len, payload, CRC-16`. The Mainboard sends STATUS every 0.5 s and nothing else unasked. The Controller may send ONE frame right after each STATUS (GET_SETTINGS or SET); the Mainboard answers with SETTINGS or ACK. Keep that rule: it is what makes half-duplex RS-485 work. Values are `LinkItem`s as scaled `int16` (x10 for °C/%RH). **Bump `LINK_PROTOCOL_VERSION` when a payload struct changes**, and keep `linkItemInfo()` in step with `sanitize()`.
 - The Mainboard owns all settings and makes all control decisions. The Controller only displays and sends changes. A change is shown as pending (inverted) until the Mainboard's ACK.
 - Control rules (bands, reheat while dehumidifying, fan run-on, compressor min off/on times, sensor-fault and fan-fault shutdown) live in `src/mainboard/climate_control.cpp`. They are specified in `PLAN.md` section 2. If you change behaviour, update `PLAN.md`, the test list and `tools/host-test/`, and run the host tests.

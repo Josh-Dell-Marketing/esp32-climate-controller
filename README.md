@@ -11,6 +11,7 @@ More documents:
 
 - The project plan, the control rules and the phases are in **[PLAN.md](PLAN.md)**.
 - Picking up the project? Start with **[CLAUDE.md](CLAUDE.md)**.
+- Wiring both boards on breadboards and flashing them from Windows 11: **[docs/BENCH_SETUP.md](docs/BENCH_SETUP.md)**.
 - **[hardware/](hardware/README.md)** has the relay carrier PCB (KiCad 10), its simulations and a 3D-printable case. These are the Phase 1 **ESP8266** design and do not fit the new Mainboard. They are kept for reference.
 
 **Mains:** a compressor needs a contactor, and a heater needs its own thermal cut-out. See PLAN.md section 1.
