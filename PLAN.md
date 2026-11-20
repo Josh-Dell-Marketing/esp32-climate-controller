@@ -1,6 +1,6 @@
 # Climate Controller: Project Plan
 
-An ESP8266 (NodeMCU) controls a temperature and humidity unit through 4 relays: fan, heater, humidifier and compressor. It holds a temperature set point and a humidity set point. A web page shows the readings and the relays, and lets you change the set points.
+An ESP32 controls a temperature and humidity unit through 4 relays: fan, heater, humidifier and compressor. It holds a temperature set point and a humidity set point. A second ESP32 acts as a controller, with a small LCD screen and rotary encoder (for testing there will be 2 encoders, in final version this will change to one concentric rotary encoder). This will be connected to the main controller via a wired connection, and is responsible for user interface operation, such as changes to setpoint, configuration settings, and reporting of current measured temperature and humidity levels. 
 
 Status, 13 Nov 2026: Phase 1 is built. There is no sensor yet, so the web page has a simulated sensor.
 
